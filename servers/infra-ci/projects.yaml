@@ -1,0 +1,7 @@
+- project:
+    name: update-jenkins
+    ci-name: local
+    prefix: infra.
+    jobs:
+      - common/update-jenkins-jobs
+      - common/update-jenkins-views

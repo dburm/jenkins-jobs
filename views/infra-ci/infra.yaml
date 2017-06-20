@@ -1,0 +1,13 @@
+- view:
+    type: list
+    name: 'Infra'
+    regex: '^infra\..+'
+    columns:
+      - status
+      - weather
+      - job
+      - last-success
+      - last-failure
+      - last-duration
+      - build-button
+    recurse: False

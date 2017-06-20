@@ -1,0 +1,1 @@
+-e git+https://github.com/openstack-infra/jenkins-job-builder@4960f92ad304cc76772582e9472784ada311e06d#egg=jenkins-job-builder

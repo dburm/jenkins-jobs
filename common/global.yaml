@@ -1,0 +1,4 @@
+- defaults:
+    name: infra-config
+    infra-host: http://127.0.0.1:8081
+    infra-prj: infra/jenkins-jobs

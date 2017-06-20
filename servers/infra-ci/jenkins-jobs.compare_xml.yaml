@@ -1,0 +1,37 @@
+- job:
+    name: 'infra.jenkins-jobs.compare_xml'
+    description: |
+            <h2>Jenkins Job Builder Compare XML</h2>
+            <h3>Check for changed jobs. If changed job is present on a blocked list, fail the build.</h3>
+    concurrent: true
+    build-discarder:
+      days-to-keep: 7
+    node: 'jjb_compare_xml'
+    builders:
+      - shell:
+          !include-raw: 'builders/jjb_compare_xml.sh'
+    properties:
+      - heavy-job:
+          weight: 1
+    parameters:
+      - string:
+          name: GERRIT_REFSPEC
+          default: 'refs/heads/master'
+      - string:
+          name: BASE_COMMIT
+          default: 'HEAD~1'
+          description: 'Base commit for checking diffs. Defaults to HEAD of jenkins-jobs master branch.'
+    scm:
+      - main:
+          reponame: 'infra/jenkins-jobs'
+          repobranch: '$GERRIT_BRANCH'
+    triggers:
+      - main:
+          project-name: 'infra/jenkins-jobs'
+    publishers:
+      - archive:
+          artifacts: 'output/**'
+          allow-empty: 'true'
+      - description-setter:
+          regexp: (^<b>(JOBS|VIEWS):</b><br>\[(?!blocked)[a-z]*\].*)
+          regexp-for-failed: (^<b>(JOBS|VIEWS):</b><br>\[blocked\].*)

@@ -1,0 +1,23 @@
+- job:
+    name: 'infra.jenkins-jobs.check_shell'
+    description:
+      !include-raw: descriptions/shellcheck.html
+    concurrent: true
+    node: 'shellcheck'
+    builders:
+      - shell:
+          !include-raw: builders/check_shell.sh
+    properties:
+      - heavy-job:
+          weight: 1
+    parameters:
+      - string:
+          name: GERRIT_REFSPEC
+          default: 'refs/heads/master'
+    scm:
+      - main:
+          reponame: 'infra/jenkins-jobs'
+          repobranch: '$GERRIT_BRANCH'
+    triggers:
+      - main:
+          project-name: 'infra/jenkins-jobs'

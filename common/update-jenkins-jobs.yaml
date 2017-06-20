@@ -1,0 +1,81 @@
+- job-template:
+    name: '{prefix}update-jenkins-jobs'
+    id: common/update-jenkins-jobs
+    defaults: infra-config
+    description: |
+      <p>Update jenkins jobs configuration on infra/jenkins-jobs merge or manually</p>
+      <p>Requires python-tox package and user credentials stored as JJB_USER and JJB_PASS using Jenkins Global Passwords feature</p>
+
+    jobs-update-node: 'jjb_update'
+    jobs-update-timer: 'H * * * *'
+    jobs-update-timeout: 30
+
+    concurrent: false
+    node: '{jobs-update-node}'
+
+    parameters:
+    - string:
+        name: JOBS_LIST
+        description: 'Space separated list of jobs to update. Will update all jobs if empty'
+
+    scm:
+    - git:
+        branches:
+        - master
+        remotes:
+        - gerrit:
+            url: '{infra-host}/{infra-prj}.git'
+        choosing-strategy: default
+
+    triggers:
+    #- timed: '{jobs-update-timer}'
+    - gerrit:
+        trigger-on:
+        - change-merged-event
+        projects:
+        - project-compare-type: PLAIN
+          project-pattern: '{infra-prj}'
+          branches:
+          - branch-compare-type: PLAIN
+            branch-pattern: 'master'
+          file-paths:
+          - compare-type: ANT
+            pattern: 'common/**'
+          - compare-type: ANT
+            pattern: 'servers/{ci-name}/**'
+
+    wrappers:
+    - timestamps
+    - inject-passwords:
+        global: true
+    - timeout:
+        fail: true
+        timeout: '{jobs-update-timeout}'
+
+    builders:
+    - inject:
+        properties-content: 'CI_NAME={ci-name}'
+    - shell:
+        !include-raw-escape: scripts/update-jenkins-jobs.sh
+
+    publishers:
+    - post-tasks:
+      - matches:
+        - log-text: '.'
+        escalate-status: true
+        script: !include-raw-escape: scripts/update-jenkins-cleanup.sh
+    #- email-ext:
+    #    body: $DEFAULT_CONTENT
+    #    aborted: true
+    #    failure: true
+    #    still-failing: true
+    #    fixed: true
+    #    send-to:
+    #    - recipients
+    #    - requester
+    #    recipients: ci+alert@my.domain
+    #    subject: '[Jenkins] {ci-name} $BUILD_STATUS - $PROJECT_NAME - # $BUILD_NUMBER'
+    #- naginator:
+    #    max-failed-builds: 3
+    #    fixed-delay: 10
+    #    regular-expression: 'authentication failed \[\d\d\d\]'
